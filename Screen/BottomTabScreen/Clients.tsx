@@ -7,6 +7,7 @@ import { Location } from "../PlaceOrderScreen";
 import ClientLocationList from "../../components/ClientLocationList";
 
 export interface ApiClient {
+  client_id: ReactNode;
   client_master_id: number;
   client_name: string;
   cm_status: string;
@@ -105,7 +106,7 @@ export default Clients;
 
 const styles = StyleSheet.create({
   mainContainer: {
-    padding: 16,
+    padding: 10,
     marginBottom: 10,
     backgroundColor: '#fff',
     borderRadius: 5,

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, TextInput, View,TouchableOpacity } from "react-native";
 import Button from "../components/Button";
 import { Domain } from "../Domain";
 import { useNavigation } from "@react-navigation/native";
@@ -12,35 +12,64 @@ function Login() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const handleLogin = async () => {
-    // const url = `${Domain}/api/auth/login?email=${encodeURIComponent(
-    //   email
-    // )}&password=${encodeURIComponent(Password)}`;
-
     const url = `${Domain}/api/auth/login?email=${email}&password=${Password}`;
-
-    console.log("url", url);
+  
     try {
-      await fetch(url, {
-        method: "POST",
+      const response = await fetch(url, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      })
-        .then((respo) => respo.json())
-        .then(async (res) => {
-          // console.log("res", res);
-          await AsyncStorage.setItem("my-key", res.token);
-          console.log("login", res.token);
-          if (res.token) {
-            navigation.navigate("Tabs");
-          }
-        });
-      // navigation.navigate("Tabs");
-    } catch (error: any) {
+      });
+  
+      const res = await response.json();
+      console.log("Login Response:", res);
+  
+      if (res && res.token && res.user) {
+        // Save token and email to AsyncStorage
+        await AsyncStorage.setItem('my-key', res.token);
+        await AsyncStorage.setItem('email', res.user.email);
+        await AsyncStorage.setItem('name', res.user.name);
+        console.log("Email Stored:", res.user.email);
+        console.log("Name Stored:", res.user.name);
+        navigation.navigate('Tabs');
+      } else {
+        console.error("Login failed. Response does not contain required data.");
+      }
+    } catch (error) {
       console.error("Error:", error.message);
     }
-    // navigation.navigate("Tabs");
   };
+  // const handleLogin = async () => {
+  //   // const url = `${Domain}/api/auth/login?email=${encodeURIComponent(
+  //   //   email
+  //   // )}&password=${encodeURIComponent(Password)}`;
+
+  //   const url = `${Domain}/api/auth/login?email=${email}&password=${Password}`;
+
+  //   console.log("url", url);
+  //   try {
+  //     await fetch(url, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     })
+  //       .then((respo) => respo.json())
+  //       .then(async (res) => {
+  //         console.log("res", res);
+  //         await AsyncStorage.setItem("my-key", res.token);
+  //         console.log("login", res.token);
+  //         if (res.token) {
+  //           navigation.navigate("Tabs");
+  //         }
+  //       });
+  //     // navigation.navigate("Tabs");
+  //   } catch (error: any) {
+  //     console.error("Error:", error.message);
+  //   }
+  //   // navigation.navigate("Tabs");
+  // };
 
   //   const handleLogin = async () => {
   //     const url = `${Domain}/api/auth/login?email=${email}&password=${Password}`;
@@ -77,7 +106,9 @@ function Login() {
         placeholder="Password"
         onChangeText={(text) => setPassword(text)}
       />
-      <Button title="Login" onPress={handleLogin} />
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <Text style={styles.buttonText}>Login</Text>
+    </TouchableOpacity>
     </View>
   );
 }
@@ -104,5 +135,16 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 30,
     fontWeight: "bold",
+  },
+  button: {
+    backgroundColor: '#00C9E9', // Change to your desired color
+    padding: 14,
+    width: '80%',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff', // Text color
+    fontSize: 18,
   },
 });

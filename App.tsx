@@ -24,6 +24,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import PlaceOrderScreen from "./Screen/PlaceOrderScreen";
 import * as SplashScreen from "expo-splash-screen";
 import OrderDetailScreen from "./Screen/OrderDetailScreen";
+import Profile from "./Screen/Profile";
+import ItemDetails from "./Screen/ItemDetails";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,7 +34,8 @@ type RootStackParamList = {
   login: undefined;
   Tabs: undefined;
   PlaceOrder: undefined;
-
+  Profile: undefined;
+  ForgotPassword: undefined;
   // Add other screen names as needed
 };
 export type LoginScreenNavigationProp = NativeStackNavigationProp<
@@ -53,7 +56,7 @@ function BottonTabNavigator() {
       screenOptions={{
         tabBarStyle: { height: 60 }, // Adjust the height as needed
         tabBarLabelStyle: {
-          fontSize: 15,
+          fontSize: 14,
         },
       }}
     >
@@ -61,11 +64,15 @@ function BottonTabNavigator() {
         name="Items"
         component={Items}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="list" color="#3B3C3C" styles={{fontWeight: 600}} size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            focused ? (
+              <Feather name="list" color="#00C9E9" size={size} style={{ fontWeight: 'bold' }} /> // Bold when focused
+            ) : (
+              <Feather name="list" color="#3B3C3C" size={size} /> // Outline when unfocused
+            )
           ),
           tabBarLabel: ({ color }) => (
-            <Text style={{ color: '#00C9E9', fontSize: 18, fontWeight: 600 }}>Items</Text>
+            <Text style={{ color: '#00C9E9', fontSize: 16, fontWeight: '600' }}>Items</Text>
           ),
         }}
       />
@@ -73,11 +80,15 @@ function BottonTabNavigator() {
         name="Orders"
         component={Orders}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <AntDesign name="shoppingcart" color="#3B3C3C" size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            focused ? (
+              <AntDesign name="shoppingcart" color="#00C9E9" size={size} style={{ fontWeight: 'bold' }} /> // Bold when focused
+            ) : (
+              <AntDesign name="shoppingcart" color="#3B3C3C" size={size} /> // Outline when unfocused
+            )
           ),
           tabBarLabel: ({ color }) => (
-            <Text style={{ color: '#00C9E9', fontSize: 18, fontWeight: 600 }}>Orders</Text>
+            <Text style={{ color: '#00C9E9', fontSize: 16, fontWeight: '600' }}>Orders</Text>
           ),
         }}
       />
@@ -85,11 +96,15 @@ function BottonTabNavigator() {
         name="Favourite"
         component={Favourite}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialIcons name="favorite-outline" color="#3B3C3C" size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            focused ? (
+              <MaterialIcons name="favorite" color="#00C9E9" size={size} style={{ fontWeight: 'bold' }} /> // Bold when focused
+            ) : (
+              <MaterialIcons name="favorite-outline" color="#3B3C3C" size={size} /> // Outline when unfocused
+            )
           ),
           tabBarLabel: ({ color }) => (
-            <Text style={{ color: '#00C9E9', fontSize: 18, fontWeight: 600 }}>Favourite</Text>
+            <Text style={{ color: '#00C9E9', fontSize: 16, fontWeight: '600' }}>Favourite</Text>
           ),
         }}
       />
@@ -97,17 +112,38 @@ function BottonTabNavigator() {
         name="Client"
         component={Clients}
         options={{
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" color="#3B3C3C" size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            focused ? (
+              <Ionicons name="person" color="#00C9E9" size={size} style={{ fontWeight: 'bold' }} /> // Bold when focused
+            ) : (
+              <Ionicons name="person-outline" color="#3B3C3C" size={size} /> // Outline when unfocused
+            )
           ),
           tabBarLabel: ({ color }) => (
-            <Text style={{ color: '#00C9E9', fontSize: 18, fontWeight: 700 }}>Client</Text>
+            <Text style={{ color: '#00C9E9', fontSize: 16, fontWeight: '600' }}>Client</Text>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={Profile}
+        options={{
+          tabBarIcon: ({ focused, size }) => (
+            focused ? (
+              <Feather name="user" color="#00C9E9" size={size} style={{ fontWeight: 'bold' }} /> // Bold when focused
+            ) : (
+              <Feather name="user" color="#3B3C3C" size={size} /> // Outline when unfocused
+            )
+          ),
+          tabBarLabel: ({ color }) => (
+            <Text style={{ color: '#00C9E9', fontSize: 16, fontWeight: '600' }}>Profile</Text>
           ),
         }}
       />
     </Tab.Navigator>
   );
 }
+
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState<string | undefined>(
@@ -123,21 +159,40 @@ export default function App() {
     "Roboto-Regular": require("./assets/fonts/Roboto-Regular.ttf"),
   });
 
+  // useEffect(() => {
+  //   // Check for the token in AsyncStorage
+  //   const checkToken = async () => {
+  //     try {
+  //       const token = await AsyncStorage.getItem("my-key"); // Replace 'my-key' with your actual storage key
+  //       setInitialRoute(token ? "Tabs" : "login");
+  //       if (fontsLoaded) {
+  //         await SplashScreen.hideAsync();
+  //       }
+  //     } catch (error) {
+  //       console.error("Error checking token:", error);
+  //       setInitialRoute("login");
+  //     }
+  //   };
+
+  //   checkToken();
+  // }, [fontsLoaded]);
+
   useEffect(() => {
-    // Check for the token in AsyncStorage
     const checkToken = async () => {
       try {
-        const token = await AsyncStorage.getItem("my-key"); // Replace 'my-key' with your actual storage key
+        const token = await AsyncStorage.getItem("my-key");
         setInitialRoute(token ? "Tabs" : "login");
         if (fontsLoaded) {
-          await SplashScreen.hideAsync();
+          // Delay hiding the splash screen for 2 seconds
+          setTimeout(async () => {
+            await SplashScreen.hideAsync();
+          }, 4000);
         }
       } catch (error) {
         console.error("Error checking token:", error);
         setInitialRoute("login");
       }
     };
-
     checkToken();
   }, [fontsLoaded]);
 
@@ -154,7 +209,9 @@ export default function App() {
       <StatusBar style="auto" />
       <NavigationContainer>
         <Stack.Navigator initialRouteName={initialRoute}>
-          <Stack.Screen name="login" component={Login} />
+          <Stack.Screen name="login" 
+          component={Login}
+           />
           <Stack.Screen
             name="PlaceOrder"
             options={{ title: "Place Order" }}
@@ -170,6 +227,13 @@ export default function App() {
             component={BottonTabNavigator}
             options={{ headerShown: false }}
           />
+           <Stack.Screen
+            name="Profile"
+            component={Profile}
+            options={{ headerShown: true }}
+          />
+          <Stack.Screen name="ItemDetails" component={ItemDetails} />
+
         </Stack.Navigator>
       </NavigationContainer>
     </>

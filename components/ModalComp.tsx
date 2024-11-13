@@ -17,15 +17,7 @@ import QuantityInput from "./QuantityInput";
 interface Props {
   visible: Boolean;
   setVisibleModal: React.Dispatch<React.SetStateAction<boolean>>;
-  // setQuantityValue: React.Dispatch<React.SetStateAction<string | undefined>>;
   orderData: OrderData | undefined;
-  // quantityValue: number | undefined;
-  // placeOrder: (
-  //   itemId: number | undefined,
-  //   rate: string | undefined,
-  //   clientId: number | undefined,
-  //   errorMessage?: string
-  // ) => Promise<void>;
   dataOfClient: ApiClient[];
 }
 
@@ -33,18 +25,11 @@ function ModalComp({
   visible,
   setVisibleModal,
   orderData,
-  // quantityValue,
-  // placeOrder,
   dataOfClient,
-}: // setQuantityValue,
-// quantityValue,
+}: 
 Props) {
-  // console.log("orderData", quantityValue);
-
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
-
   const handleItemClick = (id: number) => {
-    // Toggle the selected state for the clicked item
     setSelectedItem(selectedItem === id ? null : id);
   };
 
@@ -63,15 +48,9 @@ Props) {
           <View style={styles.headerContainer}>
             <Text style={styles.headerText}>{orderData?.grade}</Text>
             <Text style={styles.headerText}>{orderData?.category}</Text>
-            {/* <Text>{orderData?.itemId}</Text> */}
           </View>
           <View style={styles.hrLine} />
-          {/* <Text style={styles.subHeaderText}>Quantity:{quantityValue}</Text> */}
           <Text style={styles.subHeaderText}>Rate:{orderData?.rate}</Text>
-          {/* <QuantityInput
-            setQuantityValue={setQuantityValue}
-            quantityValue={quantityValue}
-          /> */}
           <View style={styles.clientContainer}>
             <Text style={styles.clientText}>Select Clients</Text>
             <View style={styles.listClientContainer}>
@@ -97,37 +76,6 @@ Props) {
               ))}
             </View>
           </View>
-
-          {/* <Button
-            title="Buy"
-            onPress={() => {
-              // Check if orderData is defined and itemId is not undefined
-              if (
-                orderData &&
-                orderData.itemId !== undefined &&
-                // quantityValue &&
-                selectedItem
-              ) {
-                placeOrder(
-                  orderData.itemId,
-                  orderData.rate,
-                  // quantityValue,
-                  selectedItem
-                );
-              } else {
-                placeOrder(
-                  undefined!,
-                  undefined!,
-                  undefined!,
-                  "orderData or itemId is undefined or selected client"
-                );
-              }
-            }}
-            // onPress={() =>
-            //   placeOrder(orderData?.itemId, orderData?.rate, quantityValue)
-            // }
-            isModalButton
-          /> */}
         </View>
       </View>
     </Modal>

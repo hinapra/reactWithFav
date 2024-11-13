@@ -1,6 +1,12 @@
 import React, { memo, useState } from "react";
 // import { ApiItem } from "../components/Types";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  FlatList,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import QuantityInput from "./QuantityInput";
 
@@ -54,22 +60,33 @@ function ItemList({
   getOrderListId,
   orderDetail,
   textValues,
+  removeFromFavorites,
 }: ItemListProps) {
+  const [favoriteItem, setfavoriteItem] = useState(false);
   if ("favorites_id" in item) {
     return (
       <View style={styles.listItem}>
         <View style={styles.container}>
           <View>
             <View style={styles.firstContainer}>
-              <Text style={styles.sizeText}>{item.size}---</Text>
-              <Text style={styles.sizeText}>{item.grade}</Text>
+              <Text style={styles.sizeText}> {item.size}-- - </Text>
+              <Text style={styles.sizeText}> {item.grade} </Text>
             </View>
-            <View style={{ flexDirection: "row" }}>
-              <Text style={styles.categoryText}>{item.category}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity
+                onPress={() => removeFromFavorites(item.items_id)}
+              >
+                <MaterialIcons
+                  name="delete" // Use unfilled heart for removing
+                  size={24}
+                  color="gray" // Icon color when unfilled
+                />
+              </TouchableOpacity>
+              <Text style={styles.categoryText}> {item.category} </Text>
             </View>
           </View>
           <View style={styles.quantityContainer}>
-            <Text style={styles.priceText}>₹{item.rate}</Text>
+            <Text style={styles.priceText}>₹{item.rate} </Text>
             <QuantityInput
               item_id={item.items_id}
               rate={item.rate}
@@ -84,41 +101,46 @@ function ItemList({
       </View>
     );
   }
+
   if ("items_id" in item) {
     return (
       <View style={styles.listItem}>
         <View style={styles.container}>
           <View>
             <View style={styles.firstContainer}>
-              <Text style={styles.sizeTextt}>{item.size}---</Text>
-              <Text style={styles.sizeTextp}>{item.grade}</Text>
+              <Text style={styles.sizeTextt}> {item.size}-- - </Text>
+              <Text style={styles.sizeTextp}> {item.grade} </Text>
             </View>
             <View style={{ flexDirection: "row" }}>
-              <Text style={styles.categoryText}>{item.category}</Text>
-
               <View style={styles.iconContainer}>
                 {addFavourite &&
                   !isFavourite &&
-                  (item.favorites ? (
+                  ((item.favorites || favoriteItem)? (
                     <MaterialIcons
                       name="favorite"
                       size={28}
                       color="red"
-                      onPress={setFavourite}
+                      onPress={() => {
+                        setFavourite()
+                      }}
                     />
                   ) : (
                     <MaterialIcons
                       name="favorite-outline"
                       size={28}
                       color="red"
-                      onPress={() => addFavourite(item.items_id)}
+                      onPress={() => {
+                        setfavoriteItem(true)
+                        addFavourite(item.items_id)
+                      }}
                     />
                   ))}
               </View>
+              <Text style={styles.categoryText}> {item.category} </Text>
             </View>
           </View>
           <View style={styles.quantityContainer}>
-            <Text style={styles.priceText}>₹{item.rate}</Text>
+            <Text style={styles.priceText}>₹{item.rate} </Text>
             {/* <QuantityInput
               item_id={item.items_id}
               rate={item.rate}
@@ -167,7 +189,7 @@ function ItemList({
             <View style={styles.statusContainer}>
               <View style={styles.orderContianer}>
                 <Text style={styles.priceText}>
-                  Order Id : {item.order_lists_id}
+                  Order Id: {item.order_lists_id}
                 </Text>
               </View>
               <View>
@@ -187,10 +209,10 @@ function ItemList({
 
             <View style={styles.quantityContainer}>
               <Text style={styles.clientText}>
-                Client Name : {item.client_name}
+                Client Name: {item.client_name}
               </Text>
               <Text style={styles.priceText}>
-                Number Of Orders:{item.order_count}
+                Number Of Orders: {item.order_count}
               </Text>
               {/* <Button
                 title="View Details"
@@ -198,11 +220,11 @@ function ItemList({
                 isOrderDetail
               /> */}
               <TouchableOpacity
-      style={styles.button}
-      onPress={() => orderIdAndOrderDetail(item.order_lists_id)}
-    >
-      <Text style={styles.buttonText}>View Details</Text>
-    </TouchableOpacity>
+                style={styles.button}
+                onPress={() => orderIdAndOrderDetail(item.order_lists_id)}
+              >
+                <Text style={styles.buttonText}> View Details </Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -216,16 +238,16 @@ function ItemList({
         <View style={styles.container}>
           <View>
             <View style={styles.firstContainer}>
-              <Text style={styles.sizeText}>{item.make}---</Text>
-              <Text style={styles.sizeText}>{item.grade}</Text>
+              <Text style={styles.sizeText}> {item.make}-- - </Text>
+              <Text style={styles.sizeText}> {item.grade} </Text>
             </View>
             <View>
-              <Text style={styles.categoryText}>{item.category}</Text>
+              <Text style={styles.categoryText}> {item.category} </Text>
             </View>
           </View>
           <View style={styles.quantityContainer}>
-            <Text style={styles.priceText}>₹{item.rate}</Text>
-            <Text style={styles.datestyle}>{item.created_at}</Text>
+            <Text style={styles.priceText}>₹{item.rate} </Text>
+            <Text style={styles.datestyle}> {item.created_at} </Text>
           </View>
         </View>
       </View>
@@ -239,12 +261,12 @@ export default memo(ItemList);
 const styles = StyleSheet.create({
   listItem: {
     // margin: 8,
-    marginVertical: 8,
+    marginVertical: 4,
     marginHorizontal: 8,
     // marginTop: 20,
     // padding: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 6,
     borderBottomWidth: 1,
     // borderBottomColor: "#b6b6b6",
@@ -260,34 +282,37 @@ const styles = StyleSheet.create({
   },
   firstContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    // alignItems: "center",
+    // justifyContent: "center",
   },
 
   sizeText: {
-    fontSize: 20,
-    fontFamily: "Roboto-Regular",
-    // marginLeft: -,
+    fontSize: 18,
+    fontFamily: "Roboto-Medium",
     marginBottom: 4,
     textAlign: "center",
+    fontWeight: "600",
   },
   sizeTextp: {
-    fontSize: 20,
-    fontFamily: "Roboto-Regular",
+    fontSize: 18,
+    fontFamily: "Roboto-Medium",
     marginLeft: -14,
     marginBottom: 4,
+    fontWeight: "600",
   },
   sizeTextt: {
     textAlign: "center",
-    fontSize: 20,
-    fontFamily: "Roboto-Regular",
+    fontSize: 18,
+    fontFamily: "Roboto-Medium",
     marginRight: 16,
     marginBottom: 4,
+    fontWeight: "600",
   },
   categoryText: {
     fontSize: 16,
     color: "#8f9aa3",
-    fontWeight: "bold",
+    marginTop: -2,
+    fontFamily: "Roboto-Regular",
   },
   container: {
     flexDirection: "row",
@@ -296,8 +321,8 @@ const styles = StyleSheet.create({
   },
   priceText: {
     // fontWeight: "bold",
-    fontSize: 18,
-    marginBottom: -8,
+    fontSize: 14,
+    marginBottom: -4,
     fontFamily: "Roboto-Regular",
   },
   clientText: {
@@ -312,7 +337,9 @@ const styles = StyleSheet.create({
     // marginTop: -20,
   },
   iconContainer: {
-    marginLeft: 20,
+    marginLeft: -6,
+    marginRight: 6,
+    marginTop: -4,
   },
   datestyle: {
     marginTop: 10,
@@ -324,12 +351,16 @@ const styles = StyleSheet.create({
     width: 10,
     backgroundColor: "red",
     borderRadius: 50,
+    marginTop: 8,
+    marginRight: 6,
   },
   completeStatus: {
     height: 10,
     width: 10,
     backgroundColor: "#097969",
     borderRadius: 50,
+    marginTop: 8,
+    marginRight: 6,
   },
   orderContianer: {
     // borderColor: "black",
@@ -341,14 +372,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   button: {
-    backgroundColor: '#00C9E9', // Button background color
-    padding: 10, // Padding inside the button
+    backgroundColor: "#00C9E9", // Button background color
+    padding: 8, // Padding inside the button
     borderRadius: 5, // Rounded corners
-    alignItems: 'center', // Center the text inside the button
-    marginVertical: 10, // Vertical margin
+    alignItems: "center", // Center the text inside the button
+    marginVertical: 6, // Vertical margin
   },
   buttonText: {
-    color: '#FFFFFF', // Text color
-    fontSize: 16, // Text size
+    color: "#FFFFFF", // Text color
+    fontSize: 14, // Text size
   },
 });

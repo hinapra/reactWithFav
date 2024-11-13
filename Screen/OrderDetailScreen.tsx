@@ -21,7 +21,7 @@ import ItemList from "../components/ItemList";
 
 function OrderDetailScreen({ route }: { route: any }) {
   const data: OrderDetailData[] = route?.params?.data;
-  // console.log("OrderData", data);
+  console.log("OrderData", data);
   return (
     <View>
       {/* <Text>OrderDetailScreen</Text> */}

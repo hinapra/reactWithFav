@@ -43,8 +43,8 @@ function ClientLocationList({ setToggleLocation, clientId }: Props) {
 
   return (
     <View>
-      <View style={styles.locationContainer}>
-        <View style={styles.textContainer}>
+      <View style={styles.kk}>
+        {/* <View style={styles.textContainer}>
           <Text style={styles.text}>Location</Text>
           <Entypo
             name="cross"
@@ -52,13 +52,13 @@ function ClientLocationList({ setToggleLocation, clientId }: Props) {
             color="#009688"
             onPress={() => setToggleLocation(false)}
           />
-        </View>
+        </View> */}
         {locationData.length === 0 ? (
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.dd}>Loading...</Text>
         ) : (
           locationData.map((value, idx) => (
-            <View style={styles.locationInsideContainer} key={idx}>
-              <Text key={value.location_id}>{value.local_address}</Text>
+            <View style={styles.dd} key={idx}>
+              {/* <Text key={value.location_id}>{value.local_address}</Text> */}
             </View>
           ))
         )}
@@ -98,10 +98,10 @@ const styles = StyleSheet.create({
   locationInsideContainer: {
     borderWidth: 1,
     borderColor: "black",
-    padding: 10,
+    padding: 12,
     borderRadius: 5,
-    // marginLeft: 5,
-    // marginRight: 5,
+    marginLeft: 5,
+    marginRight: 5,
     marginBottom: 10,
   },
   loadingText: {

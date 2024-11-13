@@ -77,8 +77,8 @@ function PlaceOrderScreen({
       console.log("Error", error);
     }
   };
-
-  const clientLocationData = async () => {
+ 
+  const clientLocationData = async (id: number, num: any) => {
     try {
       const value = await AsyncStorage.getItem("my-key");
       fetch(`${Domain}/api/get-location`, {
@@ -90,6 +90,7 @@ function PlaceOrderScreen({
         .then((respo) => respo.json())
         .then((res) => {
           setDataOfLocation(res);
+          // console.log("res", res);
         });
     } catch (error) {
       console.error("Error", error);
@@ -107,9 +108,10 @@ function PlaceOrderScreen({
     setSelectedItem(selectedItem === id ? null : id);
   };
 
+
   const handleOrder = async () => {
     const value = await AsyncStorage.getItem("my-key");
-    console.log(selectedItem);
+    // console.log(selectedItem);
     const jsonData = JSON.stringify(modifiedArray);
 
     try {
@@ -124,14 +126,8 @@ function PlaceOrderScreen({
             style: "default",
           },
         ]);
-      } else if (locationId === null) {
-        Alert.alert("Alert", "Please select a Location", [
-          {
-            text: "OK",
-            style: "default",
-          },
-        ]);
-      } else {
+      } 
+       else {
         await fetch(`${Domain}/api/multiple-order-create`, {
           method: "POST",
           headers: {
@@ -173,71 +169,75 @@ function PlaceOrderScreen({
 
   const renderHeader = () => (
     <>
-      <Button title="Purchase" onPress={handleOrder} isOrderButton />
+     <TouchableOpacity style={styles.button} onPress={handleOrder}>
+      <Text style={styles.buttonText}>Purchase</Text>
+    </TouchableOpacity>
       <View style={styles.clientContainer}>
         <Text style={styles.clientText}>Select Client</Text>
         <View style={styles.listClientContainer}>
           {dataOfClient.length === 0 ? (
             <Text style={styles.loadingText}>Loading...</Text>
           ) : (
-            dataOfClient?.map((data) => (
-              <TouchableOpacity
-                key={data.client_master_id}
-                onPress={() => handleItemClick(data.client_master_id)}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    borderWidth: 1,
-                    borderColor: "black",
-                    padding: 10,
-                    borderRadius: 5,
-                    marginBottom: 8,
-                  }}
+            dataOfClient.map((data) => (
+              <View key={data.client_master_id}>
+                <TouchableOpacity
+                  onPress={() => handleItemClick(data.client_master_id)}
                 >
-                  <Text style={styles.clientNameText}>{data.client_name}</Text>
-                  {selectedItem === data.client_master_id && (
-                    <Feather name="check" size={24} color="black" />
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-      </View>
-      <View style={styles.location}>
-        <Text style={styles.clientText}>Select Client Location</Text>
-        <View style={styles.locationContainer}>
-          {dataOfLocation.length === 0 ? (
-            <Text style={styles.loadingText}>Loading...</Text>
-          ) : (
-            dataOfLocation?.map((data) => (
-              <View style={styles.locationMainContainer} key={data.location_id}>
-                <MaterialIcons
-                  name={
-                    toggleRadioButtons[data.location_id]
-                      ? "radio-button-on"
-                      : "radio-button-off"
-                  }
-                  size={24}
-                  color="black"
-                  onPress={() => toggleRadioButton(data.location_id)}
-                  style={styles.radioButton}
-                />
-
-                <View
-                  key={data.location_id}
-                  style={styles.locationInsideContainer}
-                >
-                  <Text style={styles.locationText}>{data.client_name}</Text>
-                  <Text style={styles.locationText}>{data.local_address}</Text>
-                </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      borderWidth: 1,
+                      borderColor: "black",
+                      padding: 10,
+                      borderRadius: 5,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Text style={styles.clientNameText}>{data.client_name}</Text>
+                    {selectedItem === data.client_master_id && (
+                      <Feather name="check" size={24} color="black" />
+                    )}
+                  </View>
+                </TouchableOpacity>
+                {selectedItem === data.client_master_id && (
+                  <View style={{}}>
+                    {/* <Text style={styles.loadingText}>Please select a client to view locations</Text> */}
+                    {dataOfLocation.length === 0 ? (
+                      <Text style={styles.loadingText}>Loading...</Text>
+                    ) : (
+                      dataOfLocation
+                        .filter((location) => location.client_id === selectedItem)
+                        .map((location) => (
+                          <View
+                            style={styles.locationMainContainer}
+                            key={location.location_id}
+                          >
+                           
+                            <View
+                              key={location.location_id}
+                              // style={styles.locationInsideContainer}
+                            >
+                              {/* <Text style={styles.locationText}>
+                                {location.client_name}
+                              </Text> */}
+                              {/* <Text style={styles.locationText}>
+                                {location.local_address}
+                              </Text> */}
+                            </View>
+                          </View>
+                        ))
+                    )}
+                  </View>
+                )}
               </View>
             ))
           )}
         </View>
       </View>
+  
+  
+
       {/* <FlatList
         data={data}
         keyExtractor={(item) => item.item_id.toString()}
@@ -247,12 +247,14 @@ function PlaceOrderScreen({
   );
 
   return (
-    <FlatList
+   <ScrollView>
+     <FlatList
       ListHeaderComponent={renderHeader}
       data={data}
       keyExtractor={(item) => item.item_id.toString()}
       renderItem={({ item }) => <PlaceOrderList item={item} />}
     />
+   </ScrollView>
   );
 }
 
@@ -277,15 +279,15 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontFamily: "Roboto-Italic",
-    fontSize: 20,
+    fontSize: 18,
   },
   listClientContainer: {
     borderWidth: 1,
     borderRadius: 8,
     borderColor: "black",
     padding: 20,
-    marginLeft: 8,
-    marginRight: 8,
+    marginLeft: 2,
+    marginRight: 2,
   },
   locationContainer: {
     // borderWidth: 1,
@@ -301,7 +303,9 @@ const styles = StyleSheet.create({
     borderColor: "black",
     borderRadius: 8,
     padding: 10,
-    marginHorizontal: 8,
+    marginHorizontal: 0,
+    marginBottom: 16,
+    marginTop: 10,
   },
   locationInsideContainer: {
     // borderWidth: 1,
@@ -316,6 +320,7 @@ const styles = StyleSheet.create({
     borderColor: "black",
     padding: 10,
     borderRadius: 5,
+    marginTop: 10,
   },
   locationMainContainer: {
     flexDirection: "row",
@@ -329,4 +334,24 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
   },
+  button: {
+    backgroundColor: '#00C9E9', // Background color of the button
+    paddingVertical: 14, // Vertical padding inside the button
+    paddingHorizontal: 20, // Horizontal padding inside the button
+    // borderRadius: 8, // Rounded corners
+    alignItems: 'center', // Center text horizontally
+    justifyContent: 'center', // Center text vertically
+    marginVertical: 4, // Vertical margin
+    elevation: 3, // Shadow for Android
+    shadowColor: '#000', // Shadow color for iOS
+    shadowOffset: { width: 0, height: 2 }, // Shadow offset for iOS
+    shadowOpacity: 0.3, // Shadow opacity for iOS
+    shadowRadius: 2, // Shadow blur radius for iOS
+  },
+  buttonText: {
+    color: '#FFFFFF', // Text color
+    fontSize: 16, // Font size
+    fontWeight: 'bold', // Font weight
+  },
+  
 });

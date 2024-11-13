@@ -5,7 +5,6 @@ import {
   FlatList,
   ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
   Alert,
   ScrollView,
   TouchableHighlight
@@ -20,7 +19,7 @@ import ModalComp from "../../components/ModalComp";
 import { ApiClient } from "./Clients";
 import { ApiItem } from "../../components/Types";
 import Button from "../../components/Button";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Picker } from '@react-native-picker/picker'; // Import Picker
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -43,7 +42,6 @@ function Items({ navigation }: { navigation: any }) {
   const [dataItems, setDataItems] = useState<ApiItem[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(null);
-  const [showCategories, setShowCategories] = useState(true);  // State to control categories visibility
   const [searchText, setSearchText] = useState<string>("");
   const [suggestions, setSuggestions] = useState([]);
   const [searchResults, setSearchResults] = useState<ApiItem[]>([]);
@@ -64,19 +62,11 @@ function Items({ navigation }: { navigation: any }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(true);
-  const [favoriteItems, setFavoriteItems] = useState<Record<number, boolean>>({});
-  const isFocused = useIsFocused()
 
   useEffect(() => {
     fetchData();
     fetchCategories();
-  }, [isFocused]);
-
-
-  useEffect(() => {
-    // setQuantities([]);
-  }, [isButtonVisible, isFavouriteButton]);
-
+  }, []);
 
   useEffect(() => {
     // Call filterData whenever the search text or selected category changes
@@ -86,37 +76,39 @@ function Items({ navigation }: { navigation: any }) {
   useEffect(() => {
     // Initialize textValues based on the length of the data array
     setTextValues(Array(dataItems.length).fill(""));
-  }, [dataItems, isFocused]);
+  }, [dataItems]);
 
   async function fetchData() {
     try {
       const url = `${Domain}/api/get-item`;
       const value = await AsyncStorage.getItem("my-key");
-  
-      // Fetch items only in the selected category if it exists
-      if (selectedCategory) {
-        const categoryItems = await fetchItemsByCategory(selectedCategory);
-        setDataItems(categoryItems);
-        setFilteredData(categoryItems); // Also set filtered data to category-specific items
-      } else {
-        // Fetch all items if no category is selected
-        fetch(url, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${value}`,
-          },
-        })
-          .then((respo) => respo.json())
-          .then((res) => {
-            setDataItems(res);
-            setFilteredData(res); // Set filteredData to all items initially
-          });
-      }
+      // console.log(value);
+
+      // console.log(url);
+
+      fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${value}`,
+        },
+      })
+        .then((respo) => respo.json())
+        .then((res) => {
+          // console.log("items", res);
+          setDataItems(res);
+          setRenderData(res);
+          setNotFound(false);
+          // const initialValues: { [key: string]: string } = {};
+          // res.forEach((item: ApiItem) => {
+          //   initialValues[item.items_id] = "";
+          // });
+          // setTextValues(initialValues);
+        });
     } catch (error: any) {
       console.error("Error:", error.message);
     }
   }
-  
+
   const Search = async () => {
     try {
       const value = await AsyncStorage.getItem("my-key");
@@ -163,40 +155,20 @@ function Items({ navigation }: { navigation: any }) {
       console.error("Error fetching categories:", error);
     }
   };
+
   const fetchItemsByCategory = async (categoryId: string) => {
     try {
-      const token = await AsyncStorage.getItem("my-key");
-  
-      if (!token) {
-        console.error("Error: Token not found");
-        return []; // Return an empty array if the token is missing
-      }
-  
+      const value = await AsyncStorage.getItem("my-key");
       const response = await fetch(`${Domain}/api/get-item?category_id=${categoryId}`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${value}` },
       });
-  
-      if (!response.ok) {
-        console.error("Error fetching items by category: ", response.statusText);
-        return []; // Return an empty array if the response is not OK
-      }
-  
-      const data = await response.json();
-  
-      if (!Array.isArray(data)) {
-        console.error("Error: Unexpected data format", data);
-        return []; // Return an empty array if the data is not an array
-      }
-  
-      return data; // Return the parsed data if all checks pass
-  
+      return await response.json();
     } catch (error) {
       console.error("Error fetching items by category:", error);
-      return []; // Return an empty array in case of any error
+      return [];
     }
   };
-
 
   // useEffect(() => {
   //   fetchData();
@@ -205,24 +177,26 @@ function Items({ navigation }: { navigation: any }) {
   //   // setQuantities([]);
   // }, [isButtonVisible, isFavouriteButton]);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      setTextValues(Array(dataItems.length).fill(""));
+      setQuantities([]);
+      setButtonVisible(true);
+      setIsFavouriteButton(false);
+      setQuantityValue("");
+    }, [dataItems.length])
+  );
 
-  const handleCategoryChange = async (value: string | null) => {
+  const handleCategoryChange = async (value: string) => {
     setSelectedCategory(value);
-    setShowCategories(false);
-    setLoading(true);
-  
     if (value === 'all') {
-      setFilteredData(dataItems);  // Show all items if 'all' is selected
-    } else if (value) {
+      setFilteredData(dataItems); // Show all items
+    } else {
       const filteredItems = await fetchItemsByCategory(value);
       setFilteredData(filteredItems);
-    } else {
-      setFilteredData([]); // Clear filter if no category selected
     }
-  
-    setLoading(false);
   };
-  
+
   const filterData = () => {
     const regex = new RegExp(searchText, "i");
     const filtered = dataItems.filter(item => {
@@ -237,36 +211,9 @@ function Items({ navigation }: { navigation: any }) {
     setFilteredData(filtered);
   };
 
-  // Function to handle item press and navigate to the details
-  const handleItemPress = (itemId) => {
-    const selectedItem = items.find(item => item.items_id === itemId);
-    
-    if (selectedItem) {
-      navigation.navigate('ItemDetails', {
-        categoryId: selectedItem.category_id, // Assuming there's a category_id property
-        itemId: selectedItem.items_id // Pass any additional data you may need
-      });
-    }
-  };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      setTextValues(Array(dataItems.length).fill(""));
-      setQuantities([]);
-      setButtonVisible(true);
-      setIsFavouriteButton(false);
-      setQuantityValue("");
-  
-      // Check if a category is selected when refocusing
-      if (selectedCategory) {
-        handleCategoryChange(selectedCategory); // Reload items in the selected category
-      } else {
-        fetchData(); // Reload all items if no category is selected
-      }
-    }, [selectedCategory, dataItems.length])
-  );
-  
-   const AddFavourite = async (id: number) => {
+
+  const AddFavourite = async (id: number) => {
     try {
       const value = await AsyncStorage.getItem("my-key");
       fetch(`${Domain}/api/add-favorites?items_id=${id}`, {
@@ -293,8 +240,6 @@ function Items({ navigation }: { navigation: any }) {
 
     // console.log("id", id);
   };
-  
-
  
   const ModalData = (
     grade: string,
@@ -498,7 +443,7 @@ function Items({ navigation }: { navigation: any }) {
   };
 
   const setFavourite = () => {
-    Alert.alert("Alert", "Already Add In Favourites", [
+    Alert.alert("Alert", "Already Added In Favourites", [
       {
         text: "OK",
         style: "default",
@@ -512,66 +457,30 @@ function Items({ navigation }: { navigation: any }) {
   return (
   <ScrollView>
       <View style={styles.mainContainer}>
-      {showCategories && (  // Show category list only if showCategories is true
-        <View> 
-        <Text style={styles.texttt}>Our categories</Text>
-      <View style={styles.categoryListContainer}>
-      
-      {categories.map(category => (
-        <TouchableOpacity
-          key={category.category_id}
-          onPress={() => handleCategoryChange(category.category_id)}
-          style={[
-            styles.categoryItem,
-            selectedCategory === category.category_id && styles.activeCategory
-          ]}
-        >
-          <Text style={styles.categoryItemText}>{category.category}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-    </View>
-    )}
-    {!showCategories && ( // When a category is selected, show the dropdown and items
-        <View>
       <SearchBox setSearchText={setSearchText} onPress={Search} />
-
-     {/* Back button to show all categories */}
-     {selectedCategory && selectedCategory !== 'all' && (
-      <TouchableOpacity
-        onPress={() => {
-          setShowCategories(true); // Show categories again
-          setSelectedCategory(null); // Reset selected category
-        }}
-        style={styles.backButton}
-      >
-        <Text style={styles.backButtonText}>Back</Text>
-      </TouchableOpacity>
-    )}
       <View style={styles.pickerContainer}>
-      <Picker
-        selectedValue={selectedCategory}
-        onValueChange={handleCategoryChange}
-        style={styles.picker}
-        dropdownIconColor="#00C9E9" // This option can define the dropdown icon color if supported
-      >
-        <Picker.Item label="Select a category..." value={null} />
-        <Picker.Item label="All Items" value="all" />
-        {categories.map(category => (
-          <Picker.Item
-            key={category.category_id}
-            label={category.category}
-            value={category.category_id}
-          />
-        ))}
-      </Picker>
+      // <Picker
+      //   selectedValue={selectedCategory}
+      //   onValueChange={handleCategoryChange}
+      //   style={styles.picker}
+      //   dropdownIconColor="#00C9E9" // This option can define the dropdown icon color if supported
+      // >
+      //   <Picker.Item label="Select a category..." value={null} />
+      //   {categories.map(category => (
+      //     <Picker.Item
+      //       key={category.category_id}
+      //       label={category.category}
+      //       value={category.category_id}
+      //     />
+      //   ))}
+      // </Picker>
 
       <View style={styles.iconContainer}>
         <MaterialIcons name="arrow-drop-down" size={50} color="#00C9E9" />
       </View>
     </View>
-    </View>
-      )}
+
+
       {
         // showPlaceOrderButton
         shouldShowButton && (
@@ -589,8 +498,10 @@ function Items({ navigation }: { navigation: any }) {
         </TouchableHighlight>
         )
       }
-      {loading ? (
+
+      {dataItems.length === 0 ? (
         <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading....</Text>
         </View>
       ) : (
         <FlatList
@@ -666,8 +577,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden', // Ensures rounded corners are applied
     position: 'relative', // Needed for absolute positioning
     marginRight:10,
-    marginLeft:10,
-    marginVertical:16
+    marginLeft:10
   },
   iconContainer: {
     position: 'absolute',
@@ -680,49 +590,5 @@ const styles = StyleSheet.create({
     width: '100%',
     fontSize: 18,  // Set the base font size
     color: 'gray',  // Placeholder and default text color
-  },
-  categoryListContainer: {
-    marginVertical: 10,
-    borderColor: '#eee',
-    flexDirection: 'row',
-    justifyContent: 'flex-start', // Align items to start (left)
-    flexWrap: 'wrap', // Allow items to wrap to the next line
-  },
-  categoryItem: {
-    width:'48%',
-    fontSize: 18,
-    paddingVertical: 18,
-    borderWidth:2,
-    padding:16,
-    margin:2,
-    borderRadius:4,
-    borderColor: '#00C9E9', // Default border color
-    textAlign: 'center',
-    backgroundColor: 'white',
-  },
-  texttt: {
-    fontSize: 24,
-    marginVertical:20,
-    padding:5,
-    fontWeight:'600',
-    // color:'#00C9E9'
-  },
-  activeCategory: {
-    borderColor: '#00C9E9', // Highlight border color for active category
-  },
-  backButton: {
-    backgroundColor: '#00C9E9', // Adjust color based on your theme
-    padding: 6,
-    // borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 10,
-    width:'20%',
-    margin:10
-  },
-  backButtonText: {
-    color: '#ffffff', // Text color for the back button
-    fontSize: 16,
-    fontWeight: 'bold', // Bold text for emphasis
-    textAlign:'center'
   },
 });

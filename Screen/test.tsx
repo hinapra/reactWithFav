@@ -20,7 +20,7 @@ import ModalComp from "../../components/ModalComp";
 import { ApiClient } from "./Clients";
 import { ApiItem } from "../../components/Types";
 import Button from "../../components/Button";
-import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { Picker } from '@react-native-picker/picker'; // Import Picker
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -65,18 +65,11 @@ function Items({ navigation }: { navigation: any }) {
   const [notFound, setNotFound] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(true);
   const [favoriteItems, setFavoriteItems] = useState<Record<number, boolean>>({});
-  const isFocused = useIsFocused()
 
   useEffect(() => {
     fetchData();
     fetchCategories();
-  }, [isFocused]);
-
-
-  useEffect(() => {
-    // setQuantities([]);
-  }, [isButtonVisible, isFavouriteButton]);
-
+  }, []);
 
   useEffect(() => {
     // Call filterData whenever the search text or selected category changes
@@ -86,37 +79,39 @@ function Items({ navigation }: { navigation: any }) {
   useEffect(() => {
     // Initialize textValues based on the length of the data array
     setTextValues(Array(dataItems.length).fill(""));
-  }, [dataItems, isFocused]);
+  }, [dataItems]);
 
   async function fetchData() {
     try {
       const url = `${Domain}/api/get-item`;
       const value = await AsyncStorage.getItem("my-key");
-  
-      // Fetch items only in the selected category if it exists
-      if (selectedCategory) {
-        const categoryItems = await fetchItemsByCategory(selectedCategory);
-        setDataItems(categoryItems);
-        setFilteredData(categoryItems); // Also set filtered data to category-specific items
-      } else {
-        // Fetch all items if no category is selected
-        fetch(url, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${value}`,
-          },
-        })
-          .then((respo) => respo.json())
-          .then((res) => {
-            setDataItems(res);
-            setFilteredData(res); // Set filteredData to all items initially
-          });
-      }
+      // console.log(value);
+
+      // console.log(url);
+
+      fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${value}`,
+        },
+      })
+        .then((respo) => respo.json())
+        .then((res) => {
+          // console.log("items", res);
+          setDataItems(res);
+          setRenderData(res);
+          setNotFound(false);
+          // const initialValues: { [key: string]: string } = {};
+          // res.forEach((item: ApiItem) => {
+          //   initialValues[item.items_id] = "";
+          // });
+          // setTextValues(initialValues);
+        });
     } catch (error: any) {
       console.error("Error:", error.message);
     }
   }
-  
+
   const Search = async () => {
     try {
       const value = await AsyncStorage.getItem("my-key");
@@ -196,7 +191,7 @@ function Items({ navigation }: { navigation: any }) {
       return []; // Return an empty array in case of any error
     }
   };
-
+  
 
   // useEffect(() => {
   //   fetchData();
@@ -205,24 +200,24 @@ function Items({ navigation }: { navigation: any }) {
   //   // setQuantities([]);
   // }, [isButtonVisible, isFavouriteButton]);
 
-
-  const handleCategoryChange = async (value: string | null) => {
+  const handleCategoryChange = async (value: string) => {
     setSelectedCategory(value);
-    setShowCategories(false);
+    setShowCategories(false); // Hide category list when a category is selected
+  
+    // Set loading to true before fetching data
     setLoading(true);
   
     if (value === 'all') {
-      setFilteredData(dataItems);  // Show all items if 'all' is selected
-    } else if (value) {
-      const filteredItems = await fetchItemsByCategory(value);
-      setFilteredData(filteredItems);
+      setFilteredData(dataItems); // Show all items if 'all' is selected
     } else {
-      setFilteredData([]); // Clear filter if no category selected
+      const filteredItems = await fetchItemsByCategory(value);
+      setFilteredData(filteredItems); // Update with fetched data
     }
   
+    // Set loading to false after data is set
     setLoading(false);
   };
-  
+
   const filterData = () => {
     const regex = new RegExp(searchText, "i");
     const filtered = dataItems.filter(item => {
@@ -249,6 +244,12 @@ function Items({ navigation }: { navigation: any }) {
     }
   };
 
+  useEffect(() => {
+    // fetchData();
+    // setButtonVisible(true);
+    // setQuantities([]);
+  }, [isFavouriteButton]);
+
   useFocusEffect(
     React.useCallback(() => {
       setTextValues(Array(dataItems.length).fill(""));
@@ -256,44 +257,32 @@ function Items({ navigation }: { navigation: any }) {
       setButtonVisible(true);
       setIsFavouriteButton(false);
       setQuantityValue("");
-  
-      // Check if a category is selected when refocusing
-      if (selectedCategory) {
-        handleCategoryChange(selectedCategory); // Reload items in the selected category
-      } else {
-        fetchData(); // Reload all items if no category is selected
-      }
-    }, [selectedCategory, dataItems.length])
+    }, [dataItems.length])
   );
-  
-   const AddFavourite = async (id: number) => {
-    try {
-      const value = await AsyncStorage.getItem("my-key");
-      fetch(`${Domain}/api/add-favorites?items_id=${id}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${value}`,
-          "Content-Type": "application/json",
-        },
-      })
-        .then((respo) => respo.json())
-        .then(() => {
-          Alert.alert("Alert", "Add to Favourite Tab", [
-            {
-              text: "OK",
-              onPress: () => setIsFavouriteButton(() => !isFavouriteButton),
-              style: "default",
-            },
-          ]);
-          //   console.log("res", res);
-        });
-    } catch (error: any) {
-      console.log("Error", error);
-    }
 
-    // console.log("id", id);
-  };
-  
+const AddFavourite = async (id: number) => {
+  try {
+    const value = await AsyncStorage.getItem("my-key");
+    await fetch(`${Domain}/api/add-favorites?items_id=${id}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${value}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Toggle favorite state locally
+    setFavoriteItems((prevFavorites) => ({
+      ...prevFavorites,
+      [id]: !prevFavorites[id],  // Toggle the favorite status
+    }));
+
+    Alert.alert("Alert", "Added to Favorite Tab", [{ text: "OK", style: "default" }]);
+
+  } catch (error) {
+    console.error("Error", error);
+  }
+};
 
  
   const ModalData = (
@@ -498,7 +487,7 @@ function Items({ navigation }: { navigation: any }) {
   };
 
   const setFavourite = () => {
-    Alert.alert("Alert", "Already Add In Favourites", [
+    Alert.alert("Alert", "Already Added In Favourites", [
       {
         text: "OK",
         style: "default",
@@ -512,9 +501,11 @@ function Items({ navigation }: { navigation: any }) {
   return (
   <ScrollView>
       <View style={styles.mainContainer}>
+      <SearchBox setSearchText={setSearchText} onPress={Search} />
+      {/* Displaying the list of categories outside of the dropdown */}
       {showCategories && (  // Show category list only if showCategories is true
         <View> 
-        <Text style={styles.texttt}>Our categories</Text>
+        <Text style={styles.texttt}>All List Of Category</Text>
       <View style={styles.categoryListContainer}>
       
       {categories.map(category => (
@@ -534,8 +525,6 @@ function Items({ navigation }: { navigation: any }) {
     )}
     {!showCategories && ( // When a category is selected, show the dropdown and items
         <View>
-      <SearchBox setSearchText={setSearchText} onPress={Search} />
-
      {/* Back button to show all categories */}
      {selectedCategory && selectedCategory !== 'all' && (
       <TouchableOpacity
@@ -556,7 +545,6 @@ function Items({ navigation }: { navigation: any }) {
         dropdownIconColor="#00C9E9" // This option can define the dropdown icon color if supported
       >
         <Picker.Item label="Select a category..." value={null} />
-        <Picker.Item label="All Items" value="all" />
         {categories.map(category => (
           <Picker.Item
             key={category.category_id}
@@ -570,6 +558,7 @@ function Items({ navigation }: { navigation: any }) {
         <MaterialIcons name="arrow-drop-down" size={50} color="#00C9E9" />
       </View>
     </View>
+     
     </View>
       )}
       {
@@ -591,6 +580,7 @@ function Items({ navigation }: { navigation: any }) {
       }
       {loading ? (
         <View style={styles.loadingContainer}>
+          // <Text style={styles.loadingText}>Loading....</Text>
         </View>
       ) : (
         <FlatList
@@ -690,18 +680,17 @@ const styles = StyleSheet.create({
   },
   categoryItem: {
     width:'48%',
-    fontSize: 18,
-    paddingVertical: 18,
+    fontSize: 16,
+    paddingVertical: 14,
     borderWidth:2,
-    padding:16,
+    padding:12,
     margin:2,
     borderRadius:4,
-    borderColor: '#00C9E9', // Default border color
+    borderColor: '#ccc', // Default border color
     textAlign: 'center',
-    backgroundColor: 'white',
   },
   texttt: {
-    fontSize: 24,
+    fontSize: 20,
     marginVertical:20,
     padding:5,
     fontWeight:'600',

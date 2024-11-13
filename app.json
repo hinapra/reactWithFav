@@ -1,34 +1,39 @@
 {
   "expo": {
-    "name": "anchal.prajapati",
+    "name": "S M Steel",
     "slug": "test",
-    "version": "1.0.0",
+    "version": "3.0.3",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/SMSteelLogosiz.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/SMSteelLogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-
-    "assetBundlePatterns": ["**/*"],
+    
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "n"
     },
     "android": {
+      "versionCode" : 6,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/SMSteelLogosiz.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ameer_khan.myapp"
+      "targetSdkVersion": 34,
+      "package": "com.smsteel.myNewapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "9a8b7384-2606-459b-ace7-50c95f05a836"
+        "projectId": "089a6121-c86d-460c-b6ec-371a51efb108"
       }
     },
     "plugins": [
@@ -40,6 +45,12 @@
           }
         }
       ]
-    ]
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9a8b7384-2606-459b-ace7-50c95f05a836"
+    }
   }
 }
